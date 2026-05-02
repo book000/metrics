@@ -1,16 +1,13 @@
 # Base image
 FROM node:20-bookworm-slim
 
-# Copy repository
-COPY . /metrics
 WORKDIR /metrics
 
-# Setup
-RUN chmod +x /metrics/source/app/action/index.mjs \
+# システム依存関係のインストール（COPY より前に置くことでレイヤーキャッシュを最大化）
+RUN apt-get update \
+  && apt-get install -y xz-utils \
   # Install latest chrome dev package, fonts to support major charsets and skip chromium download on puppeteer install
   # Based on https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker
-  && apt-get update \
-  && apt-get install -y xz-utils \
   && apt-get install -y wget gnupg ca-certificates libgconf-2-4 \
   && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
@@ -25,9 +22,15 @@ RUN chmod +x /metrics/source/app/action/index.mjs \
   # Install python for node-gyp
   && apt-get install -y python3 \
   # Clean apt/lists
-  && rm -rf /var/lib/apt/lists/* \
-  # Install node modules and rebuild indexes
-  && npm ci \
+  && rm -rf /var/lib/apt/lists/*
+
+# npm 依存関係のインストール（package.json が変わらない限りキャッシュされる）
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# ソースコードをコピーしてインデックスをビルド
+COPY . .
+RUN chmod +x /metrics/source/app/action/index.mjs \
   && npm run build
 
 # Environment variables
