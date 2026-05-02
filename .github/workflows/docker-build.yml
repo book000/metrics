@@ -49,6 +49,13 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Set package visibility to public
-        run: gh api -X PATCH /user/packages/container/metrics -f visibility=public
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          if gh api /orgs/$OWNER >/dev/null 2>&1; then
+            gh api -X PATCH /orgs/$OWNER/packages/container/$REPO -f visibility=public
+          else
+            gh api -X PATCH /user/packages/container/$REPO -f visibility=public
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
