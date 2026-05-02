@@ -50,7 +50,7 @@ jobs:
         run: |
           docker buildx build \
             --cache-from type=gha \
-            --cache-to type=gha,mode=max \
+            --cache-to type=gha,mode=min \
             --load \
             -t lowlighter/metrics:$(echo $GIT_REF | sed 's/[^a-z]/-/g') .
       - name: Run tests

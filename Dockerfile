@@ -5,7 +5,6 @@ WORKDIR /metrics
 
 # システム依存関係のインストール（COPY より前に置くことでレイヤーキャッシュを最大化）
 RUN apt-get update \
-  && apt-get install -y xz-utils \
   # Install latest chrome dev package, fonts to support major charsets and skip chromium download on puppeteer install
   # Based on https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker
   && apt-get install -y wget gnupg ca-certificates libgconf-2-4 \
@@ -13,12 +12,6 @@ RUN apt-get update \
   && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
   && apt-get update \
   && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 libx11-xcb1 libxtst6 lsb-release --no-install-recommends \
-  # Install deno for miscellaneous scripts
-  && apt-get install -y curl unzip \
-  && curl -fsSL https://deno.land/x/install/install.sh | DENO_INSTALL=/usr/local sh \
-  # Install ruby to support github licensed gem
-  && apt-get install -y ruby-full git g++ cmake pkg-config libssl-dev \
-  && gem install licensed \
   # Install python for node-gyp
   && apt-get install -y python3 \
   # Clean apt/lists

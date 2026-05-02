@@ -97,9 +97,7 @@ if [[ "$METRICS_IMAGE_NEEDS_BUILD" -gt "0" ]]; then
   echo "Image $METRICS_IMAGE is not present locally, rebuilding it from Dockerfile"
   if [[ -n "$ACTIONS_CACHE_URL" ]] && docker buildx version >/dev/null 2>&1; then
     echo "Using GitHub Actions layer cache for Docker build"
-    # docker-container ドライバのビルダーを作成して GHA キャッシュを有効化する
-    docker buildx create --use
-    docker buildx build --cache-from type=gha --cache-to type=gha,mode=max -t $METRICS_IMAGE --load .
+    docker buildx build --cache-from type=gha --cache-to type=gha,mode=min -t $METRICS_IMAGE --load .
   else
     docker build -t $METRICS_IMAGE .
   fi
