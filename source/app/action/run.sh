@@ -69,6 +69,18 @@ if [[ $METRICS_SOURCE == "lowlighter" ]]; then
 else
   echo "Using a forked version"
   METRICS_IMAGE=metrics:forked-$METRICS_VERSION
+  # Try to pull pre-built image from GitHub Container Registry
+  METRICS_IMAGE_GHCR=ghcr.io/$METRICS_SOURCE/metrics:$METRICS_TAG
+  echo "Attempting to pull pre-built image from GHCR: $METRICS_IMAGE_GHCR"
+  if [[ -n "$GITHUB_TOKEN" ]]; then
+    echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null || true
+  fi
+  if docker image pull $METRICS_IMAGE_GHCR 2>/dev/null; then
+    echo "Pre-built image pulled from GHCR, tagging as $METRICS_IMAGE"
+    docker tag $METRICS_IMAGE_GHCR $METRICS_IMAGE
+  else
+    echo "GHCR pull failed (image may not exist yet), will build locally"
+  fi
 fi
 echo "Image name: $METRICS_IMAGE"
 
@@ -79,7 +91,12 @@ METRICS_IMAGE_NEEDS_BUILD="$?"
 set -e
 if [[ "$METRICS_IMAGE_NEEDS_BUILD" -gt "0" ]]; then
   echo "Image $METRICS_IMAGE is not present locally, rebuilding it from Dockerfile"
-  docker build -t $METRICS_IMAGE .
+  if [[ -n "$ACTIONS_CACHE_URL" ]] && docker buildx version >/dev/null 2>&1; then
+    echo "Using GitHub Actions layer cache for Docker build"
+    docker buildx build --cache-from type=gha --cache-to type=gha,mode=max -t $METRICS_IMAGE --load .
+  else
+    docker build -t $METRICS_IMAGE .
+  fi
 else
   echo "Image $METRICS_IMAGE is present locally"
 fi
