@@ -6,4 +6,3 @@
     plugin_topics_limit: 12
     use_mocked_data: 'yes'
     verify: 'yes'
-# Icons モードは外部 URL の画像取得に依存し不安定なためスキップ

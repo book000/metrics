@@ -8,6 +8,8 @@
     plugin_topics_limit: 12
 
 - name: Icons
+  test:
+    skip: true
   uses: lowlighter/metrics@latest
   with:
     filename: metrics.plugin.topics.icons.svg
