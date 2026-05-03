@@ -42,10 +42,17 @@ jobs:
           npm install -g dprint
           mkdir -v -p /home/runner/.cache/dprint/cache
           npx dprint fmt --config .github/config/dprint.json
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build lowlighter/metrics:${{ github.head_ref || 'master' }}
         env:
           GIT_REF: ${{ github.head_ref || 'master' }}
-        run: docker build -t lowlighter/metrics:$(echo $GIT_REF | sed 's/[^a-z]/-/g') .
+        run: |
+          docker buildx build \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=min \
+            --load \
+            -t lowlighter/metrics:$(echo $GIT_REF | sed 's/[^a-z]/-/g') .
       - name: Run tests
         env:
           GIT_REF: ${{ github.head_ref || 'master' }}
