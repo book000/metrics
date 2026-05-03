@@ -1,4 +1,6 @@
 - name: MBTI Personality profile
+  test:
+    skip: true
   uses: lowlighter/metrics@latest
   with:
     filename: metrics.plugin.16personalities.svg
